@@ -62,34 +62,36 @@ const UserTable = async ( { sortOrder, sortType }: Props ) => {
     }
 
     return (
-        <table className="text-center">
+        <div className="overflow-x-auto">
+            <table className="table table-zebra">
 
-            <thead>
-                <tr>
-                    <th>
-                        <Link href={'/users?sortType=name&sortOrder=' + nameSortOrder}>
-                            Name
-                        </Link>
-                    </th>
-                    <th>
-                        <Link href={'/users?sortType=email&sortOrder=' + emailSortOrder}>
-                            Email
-                        </Link>
-                    </th>
-                </tr>
-            </thead>
+                <thead>
+                    <tr>
+                        <th>
+                            <Link href={'/users?sortType=name&sortOrder=' + nameSortOrder}>
+                                Name
+                            </Link>
+                        </th>
+                        <th>
+                            <Link href={'/users?sortType=email&sortOrder=' + emailSortOrder}>
+                                Email
+                            </Link>
+                        </th>
+                    </tr>
+                </thead>
 
-            <tbody>
-                {
-                    users.map( ( user: User ) => (
-                        <tr key={ user.id }>
-                            <td>{ user.name }</td>
-                            <td>{ user.email }</td>
-                        </tr>
-                    ) )
-                }
-            </tbody>
-        </table>
+                <tbody>
+                    {
+                        users.map( ( user: User ) => (
+                            <tr key={ user.id }>
+                                <td>{ user.name }</td>
+                                <td>{ user.email }</td>
+                            </tr>
+                        ) )
+                    }
+                </tbody>
+            </table>
+        </div>
     );
 };
 
