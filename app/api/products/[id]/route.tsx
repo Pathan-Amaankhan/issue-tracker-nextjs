@@ -23,7 +23,7 @@ export async function PUT( request: NextRequest, { params }: Props ) {
 
     for ( let i = 0; i < allowedParamsLength; i++ ) {
 
-        if ( undefined === body[ allowedParams[ i ] ] ) {
+        if ( 'undefined' === typeof body[ allowedParams[ i ] ] ) {
             continue;
         }
 

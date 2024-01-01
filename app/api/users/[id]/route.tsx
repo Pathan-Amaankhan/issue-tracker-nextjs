@@ -1,63 +1,83 @@
 import {NextRequest, NextResponse} from "next/server";
-import notFound from "@/app/not-found";
-import {param} from "ts-interface-checker";
 import userSchema from "@/app/api/users/schema";
-import {SafeParseReturnType} from "zod";
+import prisma from "@/prisma/prisma";
 
 interface Props {
-  params: { id: number }
+  params: { id: string }
 }
 
 // Get single user's data.
-export function GET( request: NextRequest, { params }: Props ) {
-    if ( params.id > 10 ) {
+export async function GET( request: NextRequest, { params }: Props ) {
+
+    const user = await prisma.user.findUnique( {
+        where: {
+           id: Number.parseInt( params.id ),
+        },
+    } );
+
+    if ( ! user ) {
         return NextResponse.json( { error: 'User not found' }, { status: 404 } );
     }
 
-    return NextResponse.json( { id: 1, name: 'Amaan', email: 'abc@gmail.com' } );
+    return NextResponse.json( user );
 }
 
 // Update User.
 export async function PUT( request: NextRequest, { params }: Props ) {
 
-    if ( params.id > 10 ) {
-        return NextResponse.json( { error: 'User not found' }, { status: 404 } );
-    }
-
     const body = await request.json();
 
-    const user = { id: params.id, name: 'Amaan', email: 'abc@gmail.com' };
+    const parsed = userSchema.safeParse( body );
 
-    const allowedParams = Object.keys( userSchema.shape );
-
-    const allowedParamsLength = allowedParams.length;
-
-    for ( let i = 0; i < allowedParamsLength; i++ ) {
-
-        if ( undefined === typeof body[ allowedParams[ i ] ] ) {
-            continue;
-        }
-
-        // @ts-ignore
-        const parsed: SafeParseReturnType<string, string> = userSchema.shape[ allowedParams[ i ] ].safeParse( body[ allowedParams[ i ] ] );
-
-        if ( ! parsed.success ) {
-            return NextResponse.json( parsed.error.errors, { status: 400 } );
-        }
-
-        // @ts-ignore
-        user[ allowedParams[ i ] ] = body[ allowedParams[ i ] ];
+    if ( ! parsed.success ) {
+        return NextResponse.json( parsed.error.errors, { status: 400 } );
     }
 
-    return NextResponse.json( user, { status: 201 } );
+    let user = await prisma.user.findUnique( {
+        where: {
+            id: parseInt( params.id )
+        }
+    } );
+
+    if ( ! user ) {
+        return NextResponse.json(  { error: 'User does not exits' }, { status: 400 } );
+    }
+
+    user = await prisma.user.findUnique( {
+        where: { email: body.email }
+    } );
+
+    if ( user ) {
+        return NextResponse.json(  { error: 'User with the same email already exits' }, { status: 400 } );
+    }
+
+    const updatedUser = await prisma.user.update( {
+        where: { id: Number.parseInt( params.id ) },
+        data: {
+            name: body.name,
+            email: body.email,
+        },
+    } );
+
+    return NextResponse.json( updatedUser, { status: 201 } );
 }
 
 // Delete user.
 export async function DELETE( request: NextRequest, { params }: Props ) {
 
-    if ( params.id > 10 ) {
-        return NextResponse.json( { error: 'User not found' }, { status: 404 } );
+    const user = await prisma.user.findUnique( {
+        where: {
+            id: parseInt( params.id )
+        }
+    } );
+
+    if ( ! user ) {
+        return NextResponse.json(  { error: 'User does not exits' }, { status: 400 } );
     }
 
-    return NextResponse.json( {} );
+    const deletedUser = await prisma.user.delete( {
+        where: { id: Number.parseInt( params.id ) }
+    } );
+
+    return NextResponse.json( { deletedUser } );
 }
